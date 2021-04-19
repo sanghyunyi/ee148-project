@@ -326,7 +326,7 @@ def run(n): # n is the CV fold idx
                 else:
                     if epoch_loss < best_loss:
                         best_loss = epoch_loss
-                        torch.save(model, os.path.join(ckpt_dir, '{}_{}.ckpt'.format(n, epoch)))
+                        #torch.save(model, os.path.join(ckpt_dir, '{}_{}.ckpt'.format(n, epoch)))
                         best_model_wts = copy.deepcopy(model.state_dict())
                         test_model(model)
                         no_update_count = 0
