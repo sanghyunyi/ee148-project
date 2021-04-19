@@ -1,0 +1,4 @@
+.DS_Store
+ckpt/*
+__pycache__
+__pycache__/*
