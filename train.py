@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, division
 
+import sys
+sys.path.append('/export/home/syi/ee148/ee148-project/')
+
 from PIL import Image
 
 import torch
@@ -171,14 +174,20 @@ class affordance_model(nn.Module):
         self.clench = nn.Linear(4096, 10)
         self.poke = nn.Linear(4096, 10)
         self.palm = nn.Linear(4096, 10)
-        self.w = torch.FloatTensor([[1.,2.,3.,4.,5.,6.,7.,8.,9.,10.]])
+        w = torch.FloatTensor([[1.,2.,3.,4.,5.,6.,7.,8.,9.,10.]])
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.w = w.to(device)
 
     def weighted_sum(self, x):
         return ((self.w * x).sum(-1, keepdim=True)-1)*100/9
 
-    def forward(self, x):
+    def forward(self, x, size):
         x = self.features(x)
-        x = self.classifier(x.view(-1, 512*7*7))
+        x = x.view(-1, 512*7*7)
+        size = size.view(-1, 1)
+        size = size / 512.
+        #x = torch.cat((x, size), 1)
+        x = self.classifier(x)
 
         pinch = F.softmax(self.pinch(x), dim=-1)
         clench = F.softmax(self.clench(x), dim=-1)
@@ -200,7 +209,7 @@ def run(n): # n is the CV fold idx
     images = DatasetFolder(os.path.join(data_dir, 'train'), data_transforms['train'])
     image_datasets = make_splitted_images(images, n)
     #dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=1, shuffle=False, num_workers=1)
-    dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=128, shuffle=True, num_workers=0)
+    dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=32, shuffle=True, num_workers=4)
                   for x in ['train', 'val']}
     dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val']}
 
@@ -225,25 +234,26 @@ def run(n): # n is the CV fold idx
                 obj_size = labels[:, -1].to(device)
                 labels = labels[:, :-2].to(device)
 
-                pinch, clench, poke, palm = model(inputs)
+                pinch, clench, poke, palm = model(inputs, obj_size)
 
-                pinch = pinch.numpy()
-                clench = clench.numpy()
-                poke = poke.numpy()
-                palm = palm.numpy()
+                pinch = pinch.cpu().numpy()
+                clench = clench.cpu().numpy()
+                poke = poke.cpu().numpy()
+                palm = palm.cpu().numpy()
 
                 if i == 0:
                     all_preds = np.concatenate((pinch, clench, poke, palm), axis=-1)
-                    all_labels = labels.numpy()
+                    all_labels = labels.cpu().numpy()
                 else:
                     preds = np.concatenate((pinch, clench, poke, palm), axis=-1)
                     all_preds = np.concatenate((all_preds, preds), axis=0)
-                    labels = labels.numpy()
+                    labels = labels.cpu().numpy()
                     all_labels = np.concatenate((all_labels, labels), axis=0)
 
 
-            score_evaluation_from_np_batches(all_labels, all_preds)
+            mse, corr, acc = score_evaluation_from_np_batches(all_labels, all_preds)
             model.train(mode=was_training)
+            return mse, corr, acc
 
 
     ######################################################################
@@ -294,7 +304,7 @@ def run(n): # n is the CV fold idx
                     # forward
                     # track history if only in train
                     with torch.set_grad_enabled(phase == 'train'):
-                        pinch, clench, poke, palm = model(inputs)
+                        pinch, clench, poke, palm = model(inputs, obj_size)
 
                         loss1 = criterion(pinch, labels[:, 0:1])
                         loss2 = criterion(clench, labels[:, 1:2])
@@ -326,7 +336,7 @@ def run(n): # n is the CV fold idx
                 else:
                     if epoch_loss < best_loss:
                         best_loss = epoch_loss
-                        #torch.save(model, os.path.join(ckpt_dir, '{}_{}.ckpt'.format(n, epoch)))
+                        torch.save(model, os.path.join(ckpt_dir, '{}_fold_best.ckpt'.format(n)))
                         best_model_wts = copy.deepcopy(model.state_dict())
                         test_model(model)
                         no_update_count = 0
@@ -365,7 +375,7 @@ def run(n): # n is the CV fold idx
         for param in model.parameters():
             param.requires_grad = False
 
-    set_parameter_requires_grad(model_ft.features)
+    #set_parameter_requires_grad(model_ft.features)
 
     criterion = nn.SmoothL1Loss()
 
@@ -388,11 +398,22 @@ def run(n): # n is the CV fold idx
     ######################################################################
     #
 
-    test_model(model_ft)
+    mse, corr, acc  = test_model(model_ft)
 
     plt.ioff()
     plt.show()
 
+    return mse, corr, acc
+
+mse_list = []
+corr_list = []
+acc_list = []
 for i in range(5):
     print(str(i)+'th fold')
-    run(i)
+    mse, corr, acc = run(i)
+    mse_list.append(mse)
+    corr_list.append(corr)
+    acc_list.append(acc)
+
+print("=====FINAL RESULT=====")
+print("MSE: ", np.mean(mse_list), "Corr: ", np.mean(corr_list), "Acc: ", np.mean(acc_list))
