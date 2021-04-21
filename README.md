@@ -1,29 +1,30 @@
 # ee148-project
 
 ## Model evaluation
-After 14 epochs
 
+==> results/ckpt_resnext101_32x8d_finetune/out <==
+=====FINAL RESULT=====
+MSE:  230.51079 Corr:  0.357980932460581 Acc:  0.6197058823529412
 
-train EpochLoss: 45.1762
+==> results/ckpt_resnext101_32x8d_fulltune/out <==
+=====FINAL RESULT=====
+MSE:  233.15918 Corr:  0.3941256595745008 Acc:  0.6273529411764706
 
-val EpochLoss: 49.6531
+==> results/ckpt_vgg16_finetune/out <==
+=====FINAL RESULT=====
+MSE:  234.77205 Corr:  0.3622715843051389 Acc:  0.6205882352941177
 
-=====MSE=====
+==> results/ckpt_vgg16_finetune_with_size/out <==
+=====FINAL RESULT=====
+MSE:  228.68689 Corr:  0.3758246133883908 Acc:  0.6276470588235294
 
-Pinch:  153.79321 Clench:  322.42535 Poke:  147.36305 Palm:  412.69696
+==> results/ckpt_vgg16_fulltune/out <==
+=====FINAL RESULT=====
+MSE:  234.37846 Corr:  0.3846657600522622 Acc:  0.6329411764705882
 
-Average:  261.591
+==> results/ckpt_vgg16_fulltune_with_size/out <==
+=====FINAL RESULT=====
+MSE:  229.52426 Corr:  0.3842511294581498 Acc:  0.6255882352941177
 
-=====Corr=====
-
-Pinch:  (0.18778887601943195, 0.014196215134327743) Clench:  (0.31976609725824917, 2.1317710908553924e-05) Poke:  (0.4820734920049906, 2.8121619095335334e-11) Palm:  (0.21361618085326733, 0.005157556757480664)
-
-Average:  0.3008111615339848
-
-=====Acc=====
-
-Pinch:  0.5882352941176471 Clench:  0.5470588235294118 Poke:  0.6941176470588235 Palm:  0.5882352941176471
-
-Average:  0.6044117647058823
 
 
