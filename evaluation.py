@@ -79,7 +79,7 @@ def score_evaluation_from_np_batches(score_label, score_pred):
     '''
     batch_size = len(score_label)
 
-    mse = ((score_label - score_pred)**2).mean(axis=-1)
+    mse = ((score_label - score_pred)**2).mean(axis=0)
 
     pinch_mse = mse[0]
     clench_mse = mse[1]
