@@ -130,7 +130,7 @@ def score_evaluation_from_np_batches(score_label, score_pred):
 def score_evaluation_from_files(aff_score_labels_path, aff_score_preds_path):
     '''
     Input
-    - aff_score_labels_path: path to the ground truth affordance score json file. The json file should have to format of {<image name1>: {'pinch': 44.2, 'clench': 83, 'poke': 38.1, 'palm': 23.9}, <image name2>: {'pinch': 14.2, 'clench': 41.1, 'poke': 28.0, 'palm': 63.3}, ...}
+    - aff_score_labels_path: path to the ground truth affordance score json file. The json file should have the format of {<image name1>: {'pinch': 44.2, 'clench': 83, 'poke': 38.1, 'palm': 23.9}, <image name2>: {'pinch': 14.2, 'clench': 41.1, 'poke': 28.0, 'palm': 63.3}, ...}
     - aff_score_preds_path: path to the predicted affordance score json file. The format should be identical with the ground truth json file.
 
     Return
