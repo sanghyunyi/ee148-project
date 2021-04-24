@@ -35,6 +35,21 @@ MSE:  248.90186 Corr:  0.3859441218439143 Acc:  0.6305882352941177
 ==> results/ckpt_resnet152_fulltune_with_normalized_log_size_normalized_log_pixels_1hidden_2pathways_separated_classifiers/out <==  
 MSE:  220.02332 Corr:  0.44265670174882865 Acc:  0.6505882352941177
 
+==> results/ckpt_resnet152_fulltune_with_normalized_log_size_normalized_log_pixels_1hidden_2pathways_separated_classifiers_with_180rotation/out <==  
+MSE:  222.46243 Corr:  0.44545438294941625 Acc:  0.6326470588235293
+
+==> results/ckpt_resnet152_fulltune_with_normalized_log_size_normalized_log_pixels_1hidden_2pathways_separated_classifiers_with_horizontal_and_vertical_flip/out <==  
+MSE:  212.47531 Corr:  0.47111907978685413 Acc:  0.655
+
+==> results/ckpt_resnet152_fulltune_with_normalized_log_size_normalized_log_pixels_1hidden_2pathways_separated_classifiers_with_horizontal_flip/out <==  
+MSE:  212.19319 Corr:  0.4802025929831877 Acc:  0.6597058823529411
+
+==> results/ckpt_resnet152_fulltune_with_normalized_log_size_normalized_log_pixels_1hidden_2pathways_separated_classifiers_with_random_perspective/out <==  
+MSE:  216.72836 Corr:  0.47391685451249 Acc:  0.6552941176470588
+
+==> results/ckpt_resnet152_fulltune_with_normalized_log_size_normalized_log_pixels_1hidden_2pathways_separated_classifiers_wo_augmentation/out <==  
+MSE:  209.38864 Corr:  0.47873130037738176 Acc:  0.6526470588235294
+
 ==> results/ckpt_resnet152_fulltune_with_normalized_log_size_normalized_log_pixels_1hidden/out <==  
 MSE:  224.4345 Corr:  0.43917454003652845 Acc:  0.6473529411764705
 
