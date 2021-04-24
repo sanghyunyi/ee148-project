@@ -8,6 +8,33 @@ MSE:  228.28728 Corr:  0.41763258054849606 Acc:  0.6294117647058823
 ==> results/ckpt_resnet152_fulltune_with_normalized_log_size_1hidden/out <==  
 MSE:  227.03003 Corr:  0.4177470810816438 Acc:  0.6308823529411764
 
+==> results/ckpt_resnet152_fulltune_with_normalized_log_size_normalized_log_pixels_1hidden_2pathways_clench_only_model/out <==  
+MSE:  175.71594 Corr:  0.39519955945912577 Acc:  0.648235294117647
+
+==> results/ckpt_resnet152_fulltune_with_normalized_log_size_normalized_log_pixels_1hidden_2pathways_fully_separated_model/out <==  
+MSE:  217.6549175 Corr:  0.4567661156 Acc:  0.66
+
+==> results/ckpt_resnet152_fulltune_with_normalized_log_size_normalized_log_pixels_1hidden_2pathways/out <==  
+MSE:  225.25566 Corr:  0.44107836033636644 Acc:  0.6373529411764706
+
+==> results/ckpt_resnet152_fulltune_with_normalized_log_size_normalized_log_pixels_1hidden_2pathways_palm_only_model/out <==  
+MSE:  169.87923 Corr:  0.38983390476760993 Acc:  0.6505882352941177
+
+==> results/ckpt_resnet152_fulltune_with_normalized_log_size_normalized_log_pixels_1hidden_2pathways_pinch_only_model/out <==  
+MSE:  239.1064 Corr:  0.4807189304668487 Acc:  0.6670588235294118
+
+==> results/ckpt_resnet152_fulltune_with_normalized_log_size_normalized_log_pixels_1hidden_2pathways_poke_only_model/out <==  
+MSE:  285.9181 Corr:  0.5613120678429663 Acc:  0.6741176470588236
+
+==> results/ckpt_resnet152_fulltune_with_normalized_log_size_normalized_log_pixels_1hidden_2pathways_separated_classifiers_2048hidden_units/out <==  
+MSE:  222.46655 Corr:  0.42728767227017855 Acc:  0.6411764705882353
+
+==> results/ckpt_resnet152_fulltune_with_normalized_log_size_normalized_log_pixels_1hidden_2pathways_separated_classifiers_4096hidden_units_bn/out <==  
+MSE:  248.90186 Corr:  0.3859441218439143 Acc:  0.6305882352941177
+
+==> results/ckpt_resnet152_fulltune_with_normalized_log_size_normalized_log_pixels_1hidden_2pathways_separated_classifiers/out <==  
+MSE:  220.02332 Corr:  0.44265670174882865 Acc:  0.6505882352941177
+
 ==> results/ckpt_resnet152_fulltune_with_normalized_log_size_normalized_log_pixels_1hidden/out <==  
 MSE:  224.4345 Corr:  0.43917454003652845 Acc:  0.6473529411764705
 
