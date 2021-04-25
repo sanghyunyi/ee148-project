@@ -2,6 +2,15 @@
 
 ## Model evaluation
 
+==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_pixels_1hidden_2pathways_separated_classifiers_with_horizontal_and_vertical_flip/out <==  
+MSE:  213.05974 Corr:  0.46402621768133934 Acc:  0.6552941176470587
+
+==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_short_normalized_log_pixels_1hidden_2pathways_separated_classifiers_with_horizontal_and_vertical_flip/out <==  
+MSE:  206.81396 Corr:  0.48054613223572085 Acc:  0.6597058823529411
+
+
+### Before April 24
+
 ==> results/ckpt_resnet152_fulltune_1hidden/out <==  
 MSE:  228.28728 Corr:  0.41763258054849606 Acc:  0.6294117647058823
 
