@@ -2,8 +2,23 @@
 
 ## Model evaluation
 
+==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_pixels_1hidden_2pathways_separated_classifiers_direct_regression_with_horizontal_and_vertical_flip/out <==  
+MSE:  220.29477 Corr:  0.45513356406767747 Acc:  0.6523529411764705
+
 ==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_pixels_1hidden_2pathways_separated_classifiers_with_horizontal_and_vertical_flip/out <==  
 MSE:  213.05974 Corr:  0.46402621768133934 Acc:  0.6552941176470587
+
+==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_short_normalized_log_pixels_1hidden_2pathways_clench_only_with_horizontal_and_vertical_flip/out <==  
+MSE:  164.03946 Corr:  0.430432086883019 Acc:  0.6494117647058824
+
+==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_short_normalized_log_pixels_1hidden_2pathways_palm_only_with_horizontal_and_vertical_flip/out <==  
+MSE:  184.09875 Corr:  0.3554128707693569 Acc:  0.6317647058823529
+
+==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_short_normalized_log_pixels_1hidden_2pathways_pinch_only_with_horizontal_and_vertical_flip/out <==  
+MSE:  234.79407 Corr:  0.4847802803532083 Acc:  0.6670588235294118
+
+==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_short_normalized_log_pixels_1hidden_2pathways_poke_only_with_horizontal_and_vertical_flip/out <==  
+MSE:  254.06868 Corr:  0.6115354463439585 Acc:  0.6988235294117646
 
 ==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_short_normalized_log_pixels_1hidden_2pathways_separated_classifiers_with_horizontal_and_vertical_flip/out <==  
 MSE:  206.81396 Corr:  0.48054613223572085 Acc:  0.6597058823529411
