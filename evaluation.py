@@ -124,8 +124,67 @@ def score_evaluation_from_np_batches(score_label, score_pred):
     mean_acc = np.mean([pinch_acc, clench_acc, poke_acc, palm_acc])
     print("Average: ", mean_acc)
 
-    return [pinch_mse, clench_mse, poke_mse, palm_mse, mean_mse], [pinch_corr[0], clench_corr[0], poke_corr[0], palm_corr[0], mean_corr], [pinch_acc, clench_acc, poke_acc, palm_acc, mean_acc]
+    return mean_mse, mean_corr, mean_acc
 
+def verbose_score_evaluation_from_np_batches(score_label, score_pred):
+    '''
+    Input
+    - score_label: batch_size x 4 np array of ground truth affordance scores
+    - score_pred: batch_size x 4 np array of predicted affordance scores
+
+    First to fourth columns are pinch, clench, poke and palm scores each
+
+    Return
+    - averge MSE, average pearson correlation, average accuracy
+    '''
+    batch_size = len(score_label)
+
+    mse = ((score_label - score_pred)**2).mean(axis=0)
+
+    pinch_mse = mse[0]
+    clench_mse = mse[1]
+    poke_mse = mse[2]
+    palm_mse = mse[3]
+
+    pinch_corr = pearsonr(score_label[:, 0], score_pred[:, 0])
+    clench_corr = pearsonr(score_label[:, 1], score_pred[:, 1])
+    poke_corr = pearsonr(score_label[:, 2], score_pred[:, 2])
+    palm_corr = pearsonr(score_label[:, 3], score_pred[:, 3])
+
+    binarized_label = np.zeros((batch_size, 4))
+    binarized_pred = np.zeros((batch_size, 4))
+
+    binarized_label[:, 0] = score_label[:, 0] > median_pinch
+    binarized_label[:, 1] = score_label[:, 1] > median_clench
+    binarized_label[:, 2] = score_label[:, 2] > median_poke
+    binarized_label[:, 3] = score_label[:, 3] > median_palm
+
+    binarized_pred[:, 0] = score_pred[:, 0] > median_pinch
+    binarized_pred[:, 1] = score_pred[:, 1] > median_clench
+    binarized_pred[:, 2] = score_pred[:, 2] > median_poke
+    binarized_pred[:, 3] = score_pred[:, 3] > median_palm
+
+    pinch_acc = accuracy_score(binarized_label[:, 0], binarized_pred[:, 0])
+    clench_acc = accuracy_score(binarized_label[:, 1], binarized_pred[:, 1])
+    poke_acc = accuracy_score(binarized_label[:, 2], binarized_pred[:, 2])
+    palm_acc = accuracy_score(binarized_label[:, 3], binarized_pred[:, 3])
+
+    print("=====MSE=====")
+    print("Pinch: ", pinch_mse, "Clench: ", clench_mse, "Poke: ", poke_mse, "Palm: ", palm_mse)
+    mean_mse = np.mean(mse)
+    print("Average: ", mean_mse)
+
+    print("=====Corr=====")
+    print("Pinch: ", pinch_corr, "Clench: ", clench_corr, "Poke: ", poke_corr, "Palm: ", palm_corr)
+    mean_corr = np.mean([pinch_corr[0], clench_corr[0], poke_corr[0], palm_corr[0]])
+    print("Average: ", mean_corr)
+
+    print("=====Acc=====")
+    print("Pinch: ", pinch_acc, "Clench: ", clench_acc, "Poke: ", poke_acc, "Palm: ", palm_acc)
+    mean_acc = np.mean([pinch_acc, clench_acc, poke_acc, palm_acc])
+    print("Average: ", mean_acc)
+
+    return [pinch_mse, clench_mse, poke_mse, palm_mse, mean_mse], [pinch_corr[0], clench_corr[0], poke_corr[0], palm_corr[0], mean_corr], [pinch_acc, clench_acc, poke_acc, palm_acc, mean_acc]
 
 def score_evaluation_from_files(aff_score_labels_path, aff_score_preds_path):
     '''
