@@ -124,7 +124,7 @@ def score_evaluation_from_np_batches(score_label, score_pred):
     mean_acc = np.mean([pinch_acc, clench_acc, poke_acc, palm_acc])
     print("Average: ", mean_acc)
 
-    return mean_mse, mean_corr, mean_acc
+    return [pinch_mse, clench_mse, poke_mse, palm_mse, mean_mse], [pinch_corr[0], clench_corr[0], poke_corr[0], palm_corr[0], mean_corr], [pinch_acc, clench_acc, poke_acc, palm_acc, mean_acc]
 
 
 def score_evaluation_from_files(aff_score_labels_path, aff_score_preds_path):
