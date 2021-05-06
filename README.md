@@ -11,6 +11,9 @@ MSE:  213.05974 Corr:  0.46402621768133934 Acc:  0.6552941176470587
 ==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_short_normalized_log_pixels_1hidden_2pathways_clench_only_with_horizontal_and_vertical_flip/out <==  
 MSE:  164.03946 Corr:  0.430432086883019 Acc:  0.6494117647058824
 
+==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_short_normalized_log_pixels_1hidden_2pathways_maxPooling_separated_classifiers_with_horizontal_and_vertical_flip/out <==  
+MSE:  244.02348 Corr:  0.3401501915583223 Acc:  0.6073529411764707
+
 ==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_short_normalized_log_pixels_1hidden_2pathways_palm_only_with_horizontal_and_vertical_flip/out <==  
 MSE:  184.09875 Corr:  0.3554128707693569 Acc:  0.6317647058823529
 
@@ -20,8 +23,29 @@ MSE:  234.79407 Corr:  0.4847802803532083 Acc:  0.6670588235294118
 ==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_short_normalized_log_pixels_1hidden_2pathways_poke_only_with_horizontal_and_vertical_flip/out <==  
 MSE:  254.06868 Corr:  0.6115354463439585 Acc:  0.6988235294117646
 
+==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_short_normalized_log_pixels_1hidden_2pathways_separated_classifiers_16dim_output_with_horizontal_and_vertical_flip/out <==  
+MSE:  217.04114 Corr:  0.4635804025188556 Acc:  0.6511764705882352
+
+==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_short_normalized_log_pixels_1hidden_2pathways_separated_classifiers_20dim_output_with_horizontal_and_vertical_flip/out <==  
+MSE:  213.31563 Corr:  0.47235944238873967 Acc:  0.661470588235294
+
+==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_short_normalized_log_pixels_1hidden_2pathways_separated_classifiers_8dim_output_with_horizontal_and_vertical_flip/out <==  
+MSE:  216.13884 Corr:  0.46234226237310827 Acc:  0.6479411764705882
+
+==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_short_normalized_log_pixels_1hidden_2pathways_separated_classifiers_with_horizontal_and_vertical_flip_grayscale_jitter/out <==  
+MSE:  216.95108 Corr:  0.4571144565366663 Acc:  0.6523529411764706
+
+==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_short_normalized_log_pixels_1hidden_2pathways_separated_classifiers_with_horizontal_and_vertical_flip_grayscale/out <==  
+MSE:  218.07687 Corr:  0.4633254609257218 Acc:  0.668235294117647
+
+==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_short_normalized_log_pixels_1hidden_2pathways_separated_classifiers_with_horizontal_and_vertical_flip_jitter/out <==  
+MSE:  222.70255 Corr:  0.43002600428523347 Acc:  0.6461764705882352
+
 ==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_short_normalized_log_pixels_1hidden_2pathways_separated_classifiers_with_horizontal_and_vertical_flip/out <==  
 MSE:  206.81396 Corr:  0.48054613223572085 Acc:  0.6597058823529411
+
+==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_short_normalized_log_pixels_1hidden_2pathways_separated_classifiers_with_horizontal_and_vertical_flip_YKs_random_grayscale_jitter/out <==  
+MSE:  215.72067 Corr:  0.46920354841849266 Acc:  0.6670588235294117
 
 
 ### Before April 24
