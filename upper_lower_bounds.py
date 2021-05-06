@@ -155,7 +155,7 @@ for_save = {'mse':mse_list, 'corr':corr_list, 'acc':acc_list}
 json.dump(for_save, open("upper_bound1.json", 'w'))
 
 ##======================================================================
-# predicting average of one half from average of the other half
+# Split half noise ceiling
 
 gt = {}
 
@@ -243,12 +243,6 @@ json.dump(for_save, open("upper_bound2.json", 'w'))
 ##======================================================================
 # predicting single score from average of the others
 
-import sys
-sys.path.insert(1, '../ee148-project/')
-import random
-from scipy.stats import pearsonr
-from evaluation import *
-import numpy as np
 
 gt = {}
 
@@ -311,3 +305,76 @@ for _ in range(1000):
 
 for_save = {'mse':mse_list, 'corr':corr_list, 'acc':acc_list}
 json.dump(for_save, open("upper_bound3.json", 'w'))
+
+##======================================================================
+# Monte-Carlo noise ceiling
+
+gt = {}
+
+mse_list = []
+corr_list = []
+acc_list = []
+for _ in range(1000):
+    out = {}
+    for key, val in labels.items():
+        pi = [v for v in val['pinch'].values()]
+        c = [v for v in val['clench'].values()]
+        po = [v for v in val['poke'].values()]
+        pa = [v for v in val['palm'].values()]
+        f_ = [v for v in val['familiarity'].values()]
+        f = []
+        for e in f_:
+            sig_e = np.var(e)
+            f.append(sig_e)
+        sig_e = np.nan_to_num(np.mean(f))
+
+        pi_mean = np.nan_to_num(np.mean(pi))
+        c_mean = np.nan_to_num(np.mean(c))
+        po_mean = np.nan_to_num(np.mean(po))
+        pa_mean = np.nan_to_num(np.mean(pa))
+
+        sig_pi = np.nan_to_num(np.var(pi)-sig_e)
+        sig_c = np.nan_to_num(np.var(c)-sig_e)
+        sig_po = np.nan_to_num(np.var(po)-sig_e)
+        sig_pa = np.nan_to_num(np.var(pa)-sig_e)
+
+        rpi = max(min(np.nan_to_num(np.random.normal(pi_mean, np.sqrt(sig_pi),1))[0],100),0)
+        rc = max(min(np.nan_to_num(np.random.normal(c_mean, np.sqrt(sig_c),1))[0],100),0)
+        rpo = max(min(np.nan_to_num(np.random.normal(po_mean, np.sqrt(sig_po),1))[0],100),0)
+        rpa = max(min(np.nan_to_num(np.random.normal(pa_mean, np.sqrt(sig_pa),1))[0],100),0)
+
+        val = {'pinch': pi_mean, 'clench': c_mean, 'poke': po_mean, 'palm': pa_mean}
+        gt[key] = val
+
+        val = {'pinch': rpi, 'clench': rc, 'poke': rpo, 'palm': rpa}
+        out[key] = val
+
+    pinch_gt = []
+    pinch_pred = []
+    clench_gt = []
+    clench_pred = []
+    poke_gt = []
+    poke_pred = []
+    palm_gt = []
+    palm_pred = []
+    for k in out.keys():
+        pinch_gt.append(gt[k]['pinch'])
+        pinch_pred.append(out[k]['pinch'])
+        clench_gt.append(gt[k]['clench'])
+        clench_pred.append(out[k]['clench'])
+        poke_gt.append(gt[k]['poke'])
+        poke_pred.append(out[k]['poke'])
+        palm_gt.append(gt[k]['palm'])
+        palm_pred.append(out[k]['palm'])
+
+    gt_array = np.array([pinch_gt, clench_gt, poke_gt, palm_gt])
+    gt_array = np.transpose(gt_array)
+    pred_array = np.array([pinch_pred, clench_pred, poke_pred, palm_pred])
+    pred_array = np.transpose(pred_array)
+    mse, corr, acc = verbose_score_evaluation_from_np_batches(gt_array, pred_array)
+    mse_list.append(mse)
+    corr_list.append(corr)
+    acc_list.append(acc)
+
+for_save = {'mse':mse_list, 'corr':corr_list, 'acc':acc_list}
+json.dump(for_save, open("upper_bound4.json", 'w'))
