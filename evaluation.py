@@ -166,10 +166,10 @@ def score_evaluation_from_files(aff_score_labels_path, aff_score_preds_path):
 
 if __name__ == "__main__":
     # This part is for testing the implemented methods.
-    AFF_SCORE_LABEL_PATH = './affordanceData/Data/score_labels.json' # Path to the json file
-    AFF_SCORE_PRED_PATH = './affordanceData/Data/score_labels.json'
-    SEGMENT_LABEL_PATH = './IIT_AFF_processed/affordances_labels/' # Path to the npy files
-    SEGMENT_PRED_PATH = './IIT_AFF_processed/affordances_labels/'
+    AFF_SCORE_LABEL_PATH = './data/affordanceData/Data/score_labels.json' # Path to the json file
+    AFF_SCORE_PRED_PATH = './data/affordanceData/Data/score_labels.json'
+    SEGMENT_LABEL_PATH = './data/IIT_AFF_processed/affordances_labels/' # Path to the npy files
+    SEGMENT_PRED_PATH = './data/IIT_AFF_processed/affordances_labels/'
 
     score_evaluation_from_files(AFF_SCORE_LABEL_PATH, AFF_SCORE_PRED_PATH)
     segmentation_IoU_from_files(SEGMENT_LABEL_PATH, SEGMENT_PRED_PATH)

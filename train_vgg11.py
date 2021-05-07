@@ -112,10 +112,8 @@ data_transforms = {
         transforms.Pad(512),
         transforms.CenterCrop(512),
         transforms.Resize(224),
-        transforms.RandomRotation(180),
         transforms.RandomHorizontalFlip(),
         transforms.RandomVerticalFlip(),
-        transforms.RandomPerspective(),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ]),
@@ -199,6 +197,8 @@ class affordance_model(nn.Module):
         poke = self.weighted_sum(poke)
         palm = self.weighted_sum(palm)
 
+        print(pinch.size())
+
         return pinch, clench, poke, palm
 
 
@@ -214,7 +214,7 @@ def run(n): # n is the CV fold idx
     dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val']}
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
+    print(device)
 
     ######################################################################
     # Testing the model predictions
