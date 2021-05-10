@@ -1,7 +1,65 @@
 # ee148-project
 
 ## Model evaluation
+### Final models
+==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_short_normalized_log_pixels_1hidden_2pathways_separated_classifiers_with_horizontal_and_vertical_flip/out <==  
+=====TEST RESULT=====  
+=====MSE=====  
+Pinch:  231.55605 Clench:  155.27417 Poke:  253.38432 Palm:  169.35658  
+Average:  202.39278  
+=====Corr=====  
+Pinch:  (0.48384248988427636, 3.555864485171391e-10) Clench:  (0.37000840154431336, 3.15857430671608e-06) Poke:  (0.6148939296282525, 5.731105669473861e-17) Palm:  (0.3563396745332501, 7.621400500099152e-06)  
+Average:  0.45627112389752306  
+=====Acc=====  
+Pinch:  0.6733333333333333 Clench:  0.6133333333333333 Poke:  0.6733333333333333 Palm:  0.6266666666666667
+Average:  0.6466666666666667  
+=====CV RESULT=====  
+MSE:  210.41158 Corr:  0.4796253201691215 Acc:  0.6617647058823529  
 
+==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_short_normalized_log_pixels_1hidden_2pathways_separated_classifiers_with_horizontal_and_vertical_flip_YKs_random_grayscale_jitter/out <==  
+=====TEST RESULT=====  
+=====MSE=====  
+Pinch:  241.0931 Clench:  142.5714 Poke:  246.43735 Palm:  158.54124  
+Average:  197.16077  
+=====Corr=====  
+Pinch:  (0.48373430061013134, 3.592771066568557e-10) Clench:  (0.3723577633996663, 2.7036964058348438e-06) Poke:  (0.6134977362348577, 7.042051169761695e-17) Palm:  (0.40675751439842367, 2.4021210572278324e-07)  
+Average:  0.4690868286607698  
+=====Acc=====  
+Pinch:  0.6933333333333334 Clench:  0.6266666666666667 Poke:  0.7 Palm:  0.6133333333333333  
+Average:  0.6583333333333333  
+=====CV RESULT=====  
+MSE:  208.75655 Corr:  0.4833375016742556 Acc:  0.6641176470588235  
+
+==> results/ckpt_with_augmented_data_but_overfitting/out <==  
+=====TEST RESULT=====  
+=====MSE=====  
+Pinch:  247.24742 Clench:  165.04437 Poke:  282.40253 Palm:  170.39432  
+Average:  216.27216  
+=====Corr=====  
+Pinch:  (0.43430687051620254, 2.8125640624846293e-08) Clench:  (0.3947423118585224, 5.773145665687315e-07) Poke:  (0.5808635594568557, 6.591346390977798e-15) Palm:  (0.33843364324324665, 2.2757764338718124e-05)  
+Average:  0.43708659626870683  
+=====Acc=====  
+Pinch:  0.6466666666666666 Clench:  0.64 Poke:  0.6866666666666666 Palm:  0.6466666666666666  
+Average:  0.6549999999999999  
+=====CV RESULT=====  
+MSE:  112.47374 Corr:  0.7698354025494265 Acc:  0.819294127160811  
+
+==> results/ckpt_with_augmented_data_fixed_CV/out <==  
+=====TEST RESULT=====  
+=====MSE=====  
+Pinch:  257.86746 Clench:  159.41824 Poke:  282.1695 Palm:  190.72478  
+Average:  222.545  
+=====Corr=====  
+Pinch:  (0.42813423885296187, 4.624846599216912e-08) Clench:  (0.39674394465253704, 5.000424599897605e-07) Poke:  (0.5731640911377225, 1.7891768498029464e-14) Palm:  (0.2698979990902996, 0.0008374302893589074)  
+Average:  0.41698506843338023  
+=====Acc=====  
+Pinch:  0.64 Clench:  0.64 Poke:  0.6733333333333333 Palm:  0.62  
+Average:  0.6433333333333333  
+=====CV RESULT=====  
+MSE:  223.94478 Corr:  0.4431975601220161 Acc:  0.6467055142390712  
+
+
+### Cross validation results before May 7
 ==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_pixels_1hidden_2pathways_separated_classifiers_direct_regression_with_horizontal_and_vertical_flip/out <==  
 MSE:  220.29477 Corr:  0.45513356406767747 Acc:  0.6523529411764705
 

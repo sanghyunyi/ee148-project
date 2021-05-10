@@ -14,14 +14,12 @@ from torch.optim import lr_scheduler
 import numpy as np
 import torchvision
 from torchvision import datasets, models, transforms
-import matplotlib.pyplot as plt
 import time
 import os
 import copy
 import pickle, random, json, copy
 from evaluation import *
 
-plt.ion()   # interactive mode
 torch.manual_seed(1)
 
 ######################################################################
@@ -42,7 +40,7 @@ def make_labels():
         for v in scores.values():
             out += v
         return np.mean(out)
-    labels_path = os.path.join(data_dir, 'labels_with_pixels.json')
+    labels_path = os.path.join(data_dir, 'labels_with_pixels_aug.json')
     labels_dic = json.load(open(labels_path, 'rb'))
     out = {}
     for file_name, scores in labels_dic.items():
@@ -141,8 +139,10 @@ def train_val_idx(n, l):
     end = int((l*0.2*(n+1))%l)
     return start, end
 
-def make_splitted_images(image_datasets, n):
+def make_splitted_images(image_datasets, image_datasets2, n):
     s, e = train_val_idx(n, len(image_datasets))
+
+    test = image_datasets2
 
     if s < e:
         train = copy.deepcopy(image_datasets)
@@ -161,7 +161,7 @@ def make_splitted_images(image_datasets, n):
         val.samples = image_datasets.samples[:e]+image_datasets.samples[s:]
         val.targets = image_datasets.samples[:e]+image_datasets.targets[s:]
 
-    return {'train': train, 'val': val}
+    return {'train': train, 'val': val, 'test': test}
 
 class affordance_model(nn.Module):
     def __init__(self, originalModel):
@@ -238,11 +238,12 @@ ckpt_dir = './ckpt/'
 
 def run(n): # n is the CV fold idx
     images = DatasetFolder(os.path.join(data_dir, 'train'), data_transforms['train'])
-    image_datasets = make_splitted_images(images, n)
+    images2 = DatasetFolder(os.path.join(data_dir, 'test'), data_transforms['test'])
+    image_datasets = make_splitted_images(images, images2, n)
     #dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=1, shuffle=False, num_workers=1)
     dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=32, shuffle=True, num_workers=4)
-                  for x in ['train', 'val']}
-    dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val']}
+                  for x in ['train', 'val', 'test']}
+    dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val', 'test']}
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -253,14 +254,14 @@ def run(n): # n is the CV fold idx
     #
     #
 
-    def test_model(model):
+    def test_model(model, typ='val'):
         was_training = model.training
         model.eval()
 
         with torch.no_grad():
             count = 0
             total_loss = 0
-            for i, (inputs, labels) in enumerate(dataloaders['val']):
+            for i, (inputs, labels) in enumerate(dataloaders[typ]):
                 inputs = inputs.to(device)
                 obj_pixel = labels[:, -1].to(device)
                 obj_short = labels[:, -2].to(device)
@@ -435,9 +436,8 @@ def run(n): # n is the CV fold idx
 
     mse, corr, acc  = test_model(model_ft)
 
-    plt.ioff()
-    plt.show()
-
+    print("=====TEST RESULT=====")
+    _, _, _ = test_model(model_ft, 'test')
     return mse, corr, acc
 
 mse_list = []
@@ -451,5 +451,5 @@ for i in range(5):
     corr_list.append(corr)
     acc_list.append(acc)
 
-print("=====FINAL RESULT=====")
+print("=====CV RESULT=====")
 print("MSE: ", np.mean(mse_list), "Corr: ", np.mean(corr_list), "Acc: ", np.mean(acc_list))
