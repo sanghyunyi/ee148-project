@@ -443,7 +443,8 @@ def run(n): # n is the CV fold idx
     if n == 4:
         print("=====TEST RESULT=====")
         _, _, _ = test_model(model_ft, 'test')
-        return mse, corr, acc
+
+    return mse, corr, acc
 
 mse_list = []
 corr_list = []
