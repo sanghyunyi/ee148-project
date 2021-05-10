@@ -1,7 +1,21 @@
 # ee148-project
 
 ## Model evaluation
-### Final models
+
+### The best model, trained on the full training set using early stopping.  
+=====TEST RESULT=====  
+=====MSE=====  
+Pinch:  239.3994 Clench:  143.06828 Poke:  301.9881 Palm:  154.80666  
+Average:  209.81561  
+=====Corr=====  
+Pinch:  (0.44519651545645866, 1.1412833390005551e-08) Clench:  (0.36350534627975173, 4.827041908393934e-06) Poke:  (0.6062976510122324, 2.0049352995549724e-16) Palm:  (0.39317615534800676, 6.4558886969491e-07)  
+Average:  0.4520439170241124  
+=====Acc=====  
+Pinch:  0.6933333333333334 Clench:  0.5933333333333334 Poke:  0.6466666666666666 Palm:  0.6466666666666666  
+Average:  0.6449999999999999  
+
+
+### Results using CV
 ==> results/ckpt_resnet152_fulltune_with_normalized_log_long_normalized_log_short_normalized_log_pixels_1hidden_2pathways_separated_classifiers_with_horizontal_and_vertical_flip/out <==  
 =====TEST RESULT=====  
 =====MSE=====  

@@ -134,37 +134,14 @@ data_transforms = {
     ]),
 }
 
-
-def train_val_idx(n, l):
-    assert n >= 0
-    start = int((l*0.2*n)%l)
-    end = int((l*0.2*(n+1))%l)
-    return start, end
-
-def make_splitted_images(image_datasets, image_datasets2, transform, n):
-    s, e = train_val_idx(n, len(image_datasets))
-
+def make_splitted_images(image_datasets, image_datasets2):
     test = image_datasets2
 
-    if s < e:
-        train = copy.deepcopy(image_datasets)
-        train.samples = image_datasets.samples[:s]+image_datasets.samples[e:]
-        train.targets = image_datasets.targets[:s]+image_datasets.targets[e:]
+    train = copy.deepcopy(image_datasets)
+    train.samples = image_datasets.samples
+    train.targets = image_datasets.targets
 
-        val = copy.deepcopy(image_datasets)
-        val.samples = image_datasets.samples[s:e]
-        val.targets = image_datasets.targets[s:e]
-        val.transform = transform
-    else:
-        train = copy.deepcopy(image_datasets)
-        train.samples = image_datasets.samples[e:s]
-        train.targets = image_datasets.targets[e:s]
-
-        val = copy.deepcopy(image_datasets)
-        val.samples = image_datasets.samples[:e]+image_datasets.samples[s:]
-        val.targets = image_datasets.samples[:e]+image_datasets.targets[s:]
-        val.transform = transform
-
+    val = None
     return {'train': train, 'val': val, 'test': test}
 
 class affordance_model(nn.Module):
@@ -240,14 +217,14 @@ class affordance_model(nn.Module):
 data_dir = '../affordanceData/Data/'
 ckpt_dir = './ckpt/'
 
-def run(n): # n is the CV fold idx
+def run(stop_criterion): # n is the CV fold idx
     images = DatasetFolder(os.path.join(data_dir, 'train'), data_transforms['train'])
     images2 = DatasetFolder(os.path.join(data_dir, 'test'), data_transforms['val'])
-    image_datasets = make_splitted_images(images, images2, data_transforms['val'], n)
+    image_datasets = make_splitted_images(images, images2)
     #dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=1, shuffle=False, num_workers=1)
     dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=32, shuffle=True, num_workers=4)
-                  for x in ['train', 'val', 'test']}
-    dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val', 'test']}
+                  for x in ['train', 'test']}
+    dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'test']}
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -317,12 +294,13 @@ def run(n): # n is the CV fold idx
         #iteration = 0
         no_update_count = 0
 
+        end = False
         for epoch in range(num_epochs):
             print('Epoch {}/{}'.format(epoch, num_epochs - 1))
             print('-' * 10)
 
             # Each epoch has a training and validation phase
-            for phase in ['train', 'val']:
+            for phase in ['train']:
                 if phase == 'train':
                     model.train()  # Set model to training mode
                 else:
@@ -373,25 +351,18 @@ def run(n): # n is the CV fold idx
                 if phase == 'train':
                     scheduler.step()
                 # deep copy the model
-                else:
-                    if epoch_loss < best_loss:
-                        best_loss = epoch_loss
-                        torch.save(model, os.path.join(ckpt_dir, '{}_fold_best.ckpt'.format(n)))
-                        best_model_wts = copy.deepcopy(model.state_dict())
-                        test_model(model)
-                        no_update_count = 0
-
-                    else:
-                        no_update_count += 1
+                if epoch_loss < stop_criterion:
+                    torch.save(model, os.path.join(ckpt_dir, 'best.ckpt'))
+                    best_model_wts = copy.deepcopy(model.state_dict())
+                    end = True
 
             print()
-
-            if no_update_count >= 25:
+            if end:
                 break
+
         time_elapsed = time.time() - since
         print('Training complete in {:.0f}m {:.0f}s'.format(
             time_elapsed // 60, time_elapsed % 60))
-        print('Best val Loss: {:4f}'.format(best_loss))
 
         # load best model weights
         model.load_state_dict(best_model_wts)
@@ -438,23 +409,9 @@ def run(n): # n is the CV fold idx
     ######################################################################
     #
 
-    mse, corr, acc  = test_model(model_ft)
+    print("=====TEST RESULT=====")
+    _, _, _ = test_model(model_ft, 'test')
+    return
 
-    if n == 4:
-        print("=====TEST RESULT=====")
-        _, _, _ = test_model(model_ft, 'test')
-        return mse, corr, acc
-
-mse_list = []
-corr_list = []
-acc_list = []
-
-for i in range(5):
-    print(str(i)+'th fold')
-    mse, corr, acc = run(i)
-    mse_list.append(mse)
-    corr_list.append(corr)
-    acc_list.append(acc)
-
-print("=====CV RESULT=====")
-print("MSE: ", np.mean(mse_list), "Corr: ", np.mean(corr_list), "Acc: ", np.mean(acc_list))
+stop_criterion = max([30.4571, 36.8860, 34.7398, 15.9413, 29.8956]) # Final training losses from the 5-fold CVs.
+run(stop_criterion)
