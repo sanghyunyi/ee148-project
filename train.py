@@ -58,22 +58,17 @@ def pil_loader(path):
     # open path as file to avoid ResourceWarning (https://github.com/python-pillow/Pillow/issues/835)
     with open(path, 'rb') as f:
         img = Image.open(f)
+        img = img.convert('RGBA')
+        pixeldata = list(img.getdata())
+        for i, pixel in enumerate(pixeldata):
+            if pixel[3] == 0:
+                pixeldata[i] = (255, 255, 255, 1)
+        img.putdata(pixeldata)
         return img.convert('RGB')
-
-def accimage_loader(path):
-    import accimage
-    try:
-        return accimage.Image(path)
-    except IOError:
-        # Potentially a decoding problem, fall back to PIL.Image
-        return pil_loader(path)
 
 def default_loader(path):
     from torchvision import get_image_backend
-    if get_image_backend() == 'accimage':
-        return accimage_loader(path)
-    else:
-        return pil_loader(path)
+    return pil_loader(path)
 
 def make_dataset(directory, labels_dic):
     images = []
@@ -110,18 +105,20 @@ class DatasetFolder():
 
 data_transforms = {
     'train': transforms.Compose([
-        transforms.Pad(512),
+        transforms.Pad(512, fill=(255, 255, 255)),
+        #transforms.RandomRotation(180),
+        #transforms.RandomPerspective(),
         transforms.CenterCrop(512),
         transforms.Resize(224),
-        transforms.RandomRotation(180),
         transforms.RandomHorizontalFlip(),
         transforms.RandomVerticalFlip(),
-        transforms.RandomPerspective(),
+        transforms.ColorJitter(0.2, 0.2, 0.2, 0.2),
+        transforms.RandomGrayscale(0.15),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ]),
     'val': transforms.Compose([
-        transforms.Pad(512),
+        transforms.Pad(512, fill=(255, 255, 255)),
         transforms.CenterCrop(512),
         transforms.Resize(224),
         transforms.ToTensor(),
