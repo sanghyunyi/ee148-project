@@ -126,6 +126,7 @@ data_transforms = {
     ]),
 }
 
+
 def train_val_idx(n, l):
     assert n >= 0
     start = int((l*0.2*n)%l)
@@ -157,10 +158,9 @@ def make_splitted_images(image_datasets, n):
 class affordance_model(nn.Module):
     def __init__(self, originalModel):
         super(affordance_model, self).__init__()
-        originalModel.AuxLogits.fc = nn.Linear(768, 4096)
-        originalModel.fc = nn.Linear(2048, 4096)
-        self.features = originalModel
+        self.features = nn.Sequential(*list(originalModel.features))
         self.classifier = nn.Sequential(
+                nn.Linear(512 * 7 * 7, 4096),
                 nn.ReLU(True),
                 nn.Dropout(),
                 nn.Linear(4096, 4096),
@@ -179,9 +179,8 @@ class affordance_model(nn.Module):
         return ((self.w * x).sum(-1, keepdim=True)-1)*100/9
 
     def forward(self, x, size):
-        print(x.size())
         x = self.features(x)
-        x = x.view(-1, 4096)
+        x = x.view(-1, 512*7*7)
         size = size.view(-1, 1)
         size = size / 512.
         #x = torch.cat((x, size), 1)
@@ -363,7 +362,7 @@ def run(n): # n is the CV fold idx
     # Load a pretrained model and reset final fully connected layer.
     #
 
-    model_ft = models.inception_v3(pretrained=True)
+    model_ft = models.vgg16(pretrained=True)
 
     model_ft = affordance_model(model_ft)
 
@@ -406,7 +405,6 @@ def run(n): # n is the CV fold idx
 mse_list = []
 corr_list = []
 acc_list = []
-
 for i in range(5):
     print(str(i)+'th fold')
     mse, corr, acc = run(i)
