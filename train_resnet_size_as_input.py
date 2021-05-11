@@ -14,14 +14,13 @@ from torch.optim import lr_scheduler
 import numpy as np
 import torchvision
 from torchvision import datasets, models, transforms
-import matplotlib.pyplot as plt
 import time
 import os
 import copy
-import pickle, random, json
+import pickle, random, json, copy
 from evaluation import *
 
-plt.ion()   # interactive mode
+torch.manual_seed(1)
 
 ######################################################################
 # Load Data
@@ -41,7 +40,7 @@ def make_labels():
         for v in scores.values():
             out += v
         return np.mean(out)
-    labels_path = os.path.join(data_dir, 'labels.json')
+    labels_path = os.path.join(data_dir, 'labels_with_pixels.json')
     labels_dic = json.load(open(labels_path, 'rb'))
     out = {}
     for file_name, scores in labels_dic.items():
@@ -50,8 +49,10 @@ def make_labels():
         poke = mean(scores['poke'])
         palm = mean(scores['palm'])
         familiarity = mean2(scores['familiarity'])
-        size = scores['size']
-        out[file_name] = [pinch, clench, poke, palm, familiarity, size]
+        long = scores['normalized_log_long']
+        short = scores['normalized_log_short']
+        pixels = scores['normalized_log_pixels']
+        out[file_name] = [pinch, clench, poke, palm, familiarity, long, short, pixels]
     return out
 
 def pil_loader(path):
@@ -76,10 +77,11 @@ def make_dataset(directory, labels_dic):
     for root, _, fnames in sorted(os.walk(directory)):
         for fname in fnames:
             path = os.path.join(root, fname)
-            try:
-                item = (path, labels_dic[fname[:-4]]) # remove .png
+            fname = fname[:-4] # remove .png
+            if fname in labels_dic:
+                item = (path, labels_dic[fname])
                 images.append(item)
-            except:
+            else:
                 continue
     print(len(images))
     random.Random(4).shuffle(images)
@@ -87,7 +89,8 @@ def make_dataset(directory, labels_dic):
 
 class DatasetFolder():
     def __init__(self, directory, transform):
-        samples = make_dataset(directory, make_labels())
+        labels = make_labels()
+        samples = make_dataset(directory, labels)
         self.loader = default_loader
         self.transform = transform
         self.samples = samples
@@ -132,8 +135,10 @@ def train_val_idx(n, l):
     end = int((l*0.2*(n+1))%l)
     return start, end
 
-def make_splitted_images(image_datasets, n):
+def make_splitted_images(image_datasets, image_datasets2, transform, n):
     s, e = train_val_idx(n, len(image_datasets))
+
+    test = image_datasets2
 
     if s < e:
         train = copy.deepcopy(image_datasets)
@@ -143,6 +148,7 @@ def make_splitted_images(image_datasets, n):
         val = copy.deepcopy(image_datasets)
         val.samples = image_datasets.samples[s:e]
         val.targets = image_datasets.targets[s:e]
+        val.transform = transform
     else:
         train = copy.deepcopy(image_datasets)
         train.samples = image_datasets.samples[e:s]
@@ -151,42 +157,67 @@ def make_splitted_images(image_datasets, n):
         val = copy.deepcopy(image_datasets)
         val.samples = image_datasets.samples[:e]+image_datasets.samples[s:]
         val.targets = image_datasets.samples[:e]+image_datasets.targets[s:]
+        val.transform = transform
 
-    return {'train': train, 'val': val}
+    return {'train': train, 'val': val, 'test': test}
 
 class affordance_model(nn.Module):
     def __init__(self, originalModel):
         super(affordance_model, self).__init__()
-        originalModel.AuxLogits.fc = nn.Linear(768, 4096)
-        originalModel.fc = nn.Linear(2048, 4096)
-        self.features = originalModel
-        self.classifier = nn.Sequential(
-                nn.ReLU(True),
-                nn.Dropout(),
-                nn.Linear(4096, 4096),
-                nn.ReLU(True),
-                nn.Dropout()
+        modules = list(originalModel.children())[:-1]
+        self.features = nn.Sequential(*modules)
+        self.features2 = copy.deepcopy(self.features)
+        hidden = 4096
+        cnn_out_dim = 2*2048+3
+        self.out_dim = 10
+        self.pinch = nn.Sequential(
+            nn.Linear(cnn_out_dim, hidden),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(hidden, self.out_dim)
         )
-        self.pinch = nn.Linear(4096, 10)
-        self.clench = nn.Linear(4096, 10)
-        self.poke = nn.Linear(4096, 10)
-        self.palm = nn.Linear(4096, 10)
-        w = torch.FloatTensor([[1.,2.,3.,4.,5.,6.,7.,8.,9.,10.]])
+        self.clench = nn.Sequential(
+            nn.Linear(cnn_out_dim, hidden),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(hidden, self.out_dim)
+        )
+        self.poke = nn.Sequential(
+            nn.Linear(cnn_out_dim, hidden),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(hidden, self.out_dim)
+        )
+        self.palm = nn.Sequential(
+            nn.Linear(cnn_out_dim, hidden),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(hidden, self.out_dim)
+        )
+        w = torch.FloatTensor([list(range(self.out_dim))])
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.w = w.to(device)
 
     def weighted_sum(self, x):
-        return ((self.w * x).sum(-1, keepdim=True)-1)*100/9
+        return ((self.w * x).sum(-1, keepdim=True)-1)*100/(self.out_dim-1)
 
-    def forward(self, x, size):
-        print(x.size())
-        x = self.features(x)
-        x = x.view(-1, 4096)
-        size = size.view(-1, 1)
-        size = size / 512.
-        #x = torch.cat((x, size), 1)
-        x = self.classifier(x)
+    def forward(self, x, short, long, pixels):
+        x1 = self.features(x)
+        x2 = self.features2(x)
+        x1 = x1.view(-1, 2048)
+        x2 = x2.view(-1, 2048)
+        short = short.view(-1, 1)
+        long = long.view(-1, 1)
+        pixels = pixels.view(-1, 1)
 
+        x = torch.cat((x1, x2, short, long, pixels), 1)
+        #x = torch.cat((x1, x2, long, pixels), 1)
+        '''
+        pinch = F.sigmoid(self.pinch(x)) * 100
+        clench = F.sigmoid(self.clench(x)) * 100
+        poke = F.sigmoid(self.poke(x)) * 100
+        palm = F.sigmoid(self.palm(x)) * 100
+        '''
         pinch = F.softmax(self.pinch(x), dim=-1)
         clench = F.softmax(self.clench(x), dim=-1)
         poke = F.softmax(self.poke(x), dim=-1)
@@ -205,11 +236,12 @@ ckpt_dir = './ckpt/'
 
 def run(n): # n is the CV fold idx
     images = DatasetFolder(os.path.join(data_dir, 'train'), data_transforms['train'])
-    image_datasets = make_splitted_images(images, n)
+    images2 = DatasetFolder(os.path.join(data_dir, 'test'), data_transforms['val'])
+    image_datasets = make_splitted_images(images, images2, data_transforms['val'], n)
     #dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=1, shuffle=False, num_workers=1)
     dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=32, shuffle=True, num_workers=4)
-                  for x in ['train', 'val']}
-    dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val']}
+                  for x in ['train', 'val', 'test']}
+    dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val', 'test']}
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -220,19 +252,21 @@ def run(n): # n is the CV fold idx
     #
     #
 
-    def test_model(model):
+    def test_model(model, typ='val'):
         was_training = model.training
         model.eval()
 
         with torch.no_grad():
             count = 0
             total_loss = 0
-            for i, (inputs, labels) in enumerate(dataloaders['val']):
+            for i, (inputs, labels) in enumerate(dataloaders[typ]):
                 inputs = inputs.to(device)
-                obj_size = labels[:, -1].to(device)
-                labels = labels[:, :-2].to(device)
+                obj_pixel = labels[:, -1].to(device)
+                obj_short = labels[:, -2].to(device)
+                obj_long = labels[:, -3].to(device)
+                labels = labels[:, :-4].to(device)
 
-                pinch, clench, poke, palm = model(inputs, obj_size)
+                pinch, clench, poke, palm = model(inputs, obj_short, obj_long, obj_pixel)
 
                 pinch = pinch.cpu().numpy()
                 clench = clench.cpu().numpy()
@@ -293,8 +327,10 @@ def run(n): # n is the CV fold idx
                 # Iterate over data.
                 for inputs, labels in dataloaders[phase]:
                     inputs = inputs.to(device)
-                    obj_size = labels[:, -1].to(device)
-                    labels = labels[:, :-2].to(device)
+                    obj_pixel = labels[:, -1].to(device)
+                    obj_short = labels[:, -2].to(device)
+                    obj_long = labels[:, -3].to(device)
+                    labels = labels[:, :-4].to(device)
 
                     # zero the parameter gradients
                     optimizer.zero_grad()
@@ -302,7 +338,7 @@ def run(n): # n is the CV fold idx
                     # forward
                     # track history if only in train
                     with torch.set_grad_enabled(phase == 'train'):
-                        pinch, clench, poke, palm = model(inputs, obj_size)
+                        pinch, clench, poke, palm = model(inputs, obj_short, obj_long, obj_pixel)
 
                         loss1 = criterion(pinch, labels[:, 0:1])
                         loss2 = criterion(clench, labels[:, 1:2])
@@ -344,7 +380,7 @@ def run(n): # n is the CV fold idx
 
             print()
 
-            if no_update_count >= 20:
+            if no_update_count >= 25:
                 break
         time_elapsed = time.time() - since
         print('Training complete in {:.0f}m {:.0f}s'.format(
@@ -363,17 +399,17 @@ def run(n): # n is the CV fold idx
     # Load a pretrained model and reset final fully connected layer.
     #
 
-    model_ft = models.inception_v3(pretrained=True)
+    model_ft = models.resnet152(pretrained=True)
 
     model_ft = affordance_model(model_ft)
 
     model_ft = model_ft.to(device)
 
-    def set_parameter_requires_grad(model):
+    def set_parameter_requires_grad_false(model):
         for param in model.parameters():
             param.requires_grad = False
 
-    #set_parameter_requires_grad(model_ft.features)
+    set_parameter_requires_grad_false(model_ft.features)
 
     criterion = nn.SmoothL1Loss()
 
@@ -398,8 +434,9 @@ def run(n): # n is the CV fold idx
 
     mse, corr, acc  = test_model(model_ft)
 
-    plt.ioff()
-    plt.show()
+    if n == 4:
+        print("=====TEST RESULT=====")
+        _, _, _ = test_model(model_ft, 'test')
 
     return mse, corr, acc
 
@@ -414,5 +451,5 @@ for i in range(5):
     corr_list.append(corr)
     acc_list.append(acc)
 
-print("=====FINAL RESULT=====")
+print("=====CV RESULT=====")
 print("MSE: ", np.mean(mse_list), "Corr: ", np.mean(corr_list), "Acc: ", np.mean(acc_list))

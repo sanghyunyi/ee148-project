@@ -59,22 +59,18 @@ def pil_loader(path):
     # open path as file to avoid ResourceWarning (https://github.com/python-pillow/Pillow/issues/835)
     with open(path, 'rb') as f:
         img = Image.open(f)
+        img = img.convert('RGBA')
+        pixeldata = list(img.getdata())
+        for i, pixel in enumerate(pixeldata):
+            if pixel[3] == 0:
+                pixeldata[i] = (255, 255, 255, 1)
+        img.putdata(pixeldata)
         return img.convert('RGB')
 
-def accimage_loader(path):
-    import accimage
-    try:
-        return accimage.Image(path)
-    except IOError:
-        # Potentially a decoding problem, fall back to PIL.Image
-        return pil_loader(path)
 
 def default_loader(path):
     from torchvision import get_image_backend
-    if get_image_backend() == 'accimage':
-        return accimage_loader(path)
-    else:
-        return pil_loader(path)
+    return pil_loader(path)
 
 def make_dataset(directory, labels_dic):
     images = []
@@ -111,9 +107,10 @@ class DatasetFolder():
     def __len__(self):
         return len(self.samples)
 
+
 data_transforms = {
     'train': transforms.Compose([
-        transforms.Pad(512),
+        transforms.Pad(512, fill=(255, 255, 255)),
         #transforms.RandomRotation(180),
         #transforms.RandomPerspective(),
         transforms.CenterCrop(512),
@@ -126,7 +123,7 @@ data_transforms = {
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ]),
     'val': transforms.Compose([
-        transforms.Pad(512),
+        transforms.Pad(512, fill=(255, 255, 255)),
         transforms.CenterCrop(512),
         transforms.Resize(224),
         transforms.ToTensor(),
@@ -174,7 +171,7 @@ class affordance_model(nn.Module):
         self.features = nn.Sequential(*modules)
         self.features2 = copy.deepcopy(self.features)
         hidden = 4096
-        cnn_out_dim = 2*2048+3
+        cnn_out_dim = 2*2048
         self.out_dim = 10
         self.pinch = nn.Sequential(
             nn.Linear(cnn_out_dim, hidden),
@@ -200,6 +197,12 @@ class affordance_model(nn.Module):
             nn.Dropout(),
             nn.Linear(hidden, self.out_dim)
         )
+        self.size = nn.Sequential(
+            nn.Linear(cnn_out_dim, 3),
+            #nn.ReLU(True),
+            #nn.Dropout(),
+            #nn.Linear(hidden, 3)
+        )
         w = torch.FloatTensor([list(range(self.out_dim))])
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.w = w.to(device)
@@ -207,16 +210,17 @@ class affordance_model(nn.Module):
     def weighted_sum(self, x):
         return ((self.w * x).sum(-1, keepdim=True)-1)*100/(self.out_dim-1)
 
-    def forward(self, x, short, long, pixels):
+    def forward(self, x):
         x1 = self.features(x)
         x2 = self.features2(x)
         x1 = x1.view(-1, 2048)
         x2 = x2.view(-1, 2048)
-        short = short.view(-1, 1)
-        long = long.view(-1, 1)
-        pixels = pixels.view(-1, 1)
+        #short = short.view(-1, 1)
+        #long = long.view(-1, 1)
+        #pixels = pixels.view(-1, 1)
 
-        x = torch.cat((x1, x2, short, long, pixels), 1)
+        x = torch.cat((x1, x2), 1)
+        #x = torch.cat((x1, x2, short, long, pixels), 1)
         #x = torch.cat((x1, x2, long, pixels), 1)
         '''
         pinch = F.sigmoid(self.pinch(x)) * 100
@@ -228,13 +232,14 @@ class affordance_model(nn.Module):
         clench = F.softmax(self.clench(x), dim=-1)
         poke = F.softmax(self.poke(x), dim=-1)
         palm = F.softmax(self.palm(x), dim=-1)
+        size = self.size(x)
 
         pinch = self.weighted_sum(pinch)
         clench = self.weighted_sum(clench)
         poke = self.weighted_sum(poke)
         palm = self.weighted_sum(palm)
 
-        return pinch, clench, poke, palm
+        return pinch, clench, poke, palm, size
 
 
 data_dir = '../affordanceData/Data/'
@@ -267,12 +272,10 @@ def run(n): # n is the CV fold idx
             total_loss = 0
             for i, (inputs, labels) in enumerate(dataloaders[typ]):
                 inputs = inputs.to(device)
-                obj_pixel = labels[:, -1].to(device)
-                obj_short = labels[:, -2].to(device)
-                obj_long = labels[:, -3].to(device)
+
                 labels = labels[:, :-4].to(device)
 
-                pinch, clench, poke, palm = model(inputs, obj_short, obj_long, obj_pixel)
+                pinch, clench, poke, palm, size = model(inputs)
 
                 pinch = pinch.cpu().numpy()
                 clench = clench.cpu().numpy()
@@ -333,10 +336,8 @@ def run(n): # n is the CV fold idx
                 # Iterate over data.
                 for inputs, labels in dataloaders[phase]:
                     inputs = inputs.to(device)
-                    obj_pixel = labels[:, -1].to(device)
-                    obj_short = labels[:, -2].to(device)
-                    obj_long = labels[:, -3].to(device)
-                    labels = labels[:, :-4].to(device)
+
+                    labels = labels.to(device)
 
                     # zero the parameter gradients
                     optimizer.zero_grad()
@@ -344,14 +345,15 @@ def run(n): # n is the CV fold idx
                     # forward
                     # track history if only in train
                     with torch.set_grad_enabled(phase == 'train'):
-                        pinch, clench, poke, palm = model(inputs, obj_short, obj_long, obj_pixel)
+                        pinch, clench, poke, palm, size = model(inputs)
 
                         loss1 = criterion(pinch, labels[:, 0:1])
                         loss2 = criterion(clench, labels[:, 1:2])
                         loss3 = criterion(poke, labels[:, 2:3])
                         loss4 = criterion(palm, labels[:, 3:4])
+                        loss5 = criterion(size, labels[:, -3:])
 
-                        loss = loss1 + loss2 + loss3 + loss4
+                        loss = loss1 + loss2 + loss3 + loss4 + loss5
 
                         # backward + optimize only if in training phase
                         if phase == 'train':
