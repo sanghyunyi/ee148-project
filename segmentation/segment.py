@@ -78,7 +78,7 @@ if __name__ == '__main__':
     hand_move_arr = ['clench', 'palm', 'pinch', 'poke']
 
     os.makedirs('./segmentation_results', exist_ok=True)
-    for img_id in tqdm(img_id_arr[:30]):
+    for img_id in tqdm(img_id_arr[:50]):
         if os.path.isfile(os.path.join(IMG_PATH, img_id + '.png')):
             original_img_name = os.path.join(IMG_PATH, img_id + '.png')
             for hand_move in hand_move_arr:
