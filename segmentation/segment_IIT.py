@@ -88,11 +88,14 @@ def grab_cut(img, mask_gray, avg_saliency_mask, std_saliency_mask, save_path):
         mask, _, _ = cv2.grabCut(img, mask, None, bgdModel, fgdModel, 30, cv2.GC_INIT_WITH_MASK)
 
     mask = np.where((mask==2)|(mask==0),0,1).astype('uint8')
-    img = np.ones(img.shape[:2], np.uint8)
-    img = img * mask
-    img = img * mask_fgd
+    mask_np = np.ones(img.shape[:2], np.uint8)
+    mask_np = mask_np * mask
+    mask_np = mask_np * mask_fgd
 
-    np.save(open(save_path+'.npy', 'wb'), img)
+    img = img * mask[:, :, np.newaxis]
+    img = img * mask_fgd[:, :, np.newaxis]
+
+    np.save(open(save_path+'.npy', 'wb'), mask_np)
     cv2.imwrite(save_path+'.jpg', img)
 
 if __name__ == '__main__':
