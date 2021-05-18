@@ -69,7 +69,11 @@ class GuidedBackprop():
             if isinstance(module, ReLU):
                 module.register_backward_hook(relu_backward_hook_function)
                 module.register_forward_hook(relu_forward_hook_function)
-
+        for pos, module in self.model.features2._modules.items():
+            if isinstance(module, ReLU):
+                module.register_backward_hook(relu_backward_hook_function)
+                module.register_forward_hook(relu_forward_hook_function)
+                
     def generate_gradients(self, input_image, target_class):
         # Forward pass
         model_output = self.model(input_image)
