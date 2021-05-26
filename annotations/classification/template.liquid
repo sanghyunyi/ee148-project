@@ -1,0 +1,16 @@
+<script src="https://assets.crowd.aws/crowd-html-elements.js"></script>
+<crowd-form>
+  <crowd-image-classifier
+    name="crowd-image-classifier"
+    src="{{ task.input.taskObject | grant_read_access }}"
+    header="For the regions of the item shown, indicate the most suitable hand action."
+    categories="{{ task.input.labels | to_json | escape }}"
+  >
+    <full-instructions header="Image classification instructions">
+      <ol><li><strong>Read</strong> the task carefully and inspect the image.</li><li><strong>Read</strong> the options and review the examples provided to understand more about the labels.</li><li><strong>Choose</strong> the appropriate label that best suits the image.</li></ol>
+    </full-instructions>
+    <short-instructions>
+      <h3>The image with the white background is the original image of an item. The image with the black background contains only some regions of the same item. Please select the way you would use your hands to interact with those specific regions of the item from the four possible choices: poke, pinch, clench, and palm.</h3><h3>Here are some examples of the four possible hand actions.</h3><p>Poke</p><p><img src="https://www.its.caltech.edu/~schen5/ee148/poke.jpeg" style="max-width:100%"></p><p>Pinch</p><p><img src="https://www.its.caltech.edu/~schen5/ee148/pinch.jpeg" style="max-width:100%"></p><p>Clench</p><p><img src="https://www.its.caltech.edu/~schen5/ee148/clench.jpeg" style="max-width:100%"></p><p>Palm</p><p><img src="https://www.its.caltech.edu/~schen5/ee148/palm.jpeg" style="max-width:100%"></p><p><br></p><h3><span style="color: rgb(0, 138, 0);">Good example</span></h3><p>Poke</p><p><img src="https://www.its.caltech.edu/~schen5/ee148/poke-example.jpeg" style="max-width:100%"></p><p>Clench</p><p><img src="https://www.its.caltech.edu/~schen5/ee148/clench-example.jpeg" style="max-width:100%"></p><h3><span style="color: rgb(230, 0, 0);">Bad example</span></h3><p>Clench</p><p><img src="https://www.its.caltech.edu/~schen5/ee148/poke-example.jpeg" style="max-width:100%"></p>
+    </short-instructions>
+  </crowd-image-classifier>
+</crowd-form>
